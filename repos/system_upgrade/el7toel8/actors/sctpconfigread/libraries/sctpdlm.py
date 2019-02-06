@@ -1,10 +1,15 @@
 #
 # Functions for probing SCTP usage by DLM
 #
+import re
+
+from six.moves.configparser import SafeConfigParser
+
+from leapp.libraries.stdlib import api
+
 
 def check_dlm_cfgfile():
     """Parse DLM config file"""
-    from six.moves.configparser import SafeConfigParser
     fname = "/etc/dlm/dlm.conf"
 
     try:
@@ -27,9 +32,9 @@ def check_dlm_cfgfile():
     proto = cfg.get('dlm', 'protocol').lower()
     return proto in ['sctp', 'detect', '1', '2']
 
+
 def check_dlm_sysconfig():
     """Parse /etc/sysconfig/dlm"""
-    import re
     regex = re.compile('^[^#]*DLM_CONTROLD_OPTS.*=.*(?:--protocol|-r)[ =]*([^"\' ]+).*', re.IGNORECASE)
 
     try:
@@ -46,14 +51,14 @@ def check_dlm_sysconfig():
 
     return False
 
-def is_dlm_using_sctp(logger):
+
+def is_dlm_using_sctp():
     if check_dlm_cfgfile():
-        logger.info('DLM is configured to use SCTP on dlm.conf.')
+        api.current_logger().info('DLM is configured to use SCTP on dlm.conf.')
         return True
 
     if check_dlm_sysconfig():
-        logger.info('DLM is configured to use SCTP on sysconfig.')
+        api.current_logger().info('DLM is configured to use SCTP on sysconfig.')
         return True
 
     return False
-
