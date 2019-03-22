@@ -1,0 +1,31 @@
+.TH LEAPP "1" "23/01/2019" "healthcheck 0.1.0" "User Commands"
+.SH NAME
+healtcheck - Tool to check the system configuration for problems. 
+.SH SYNOPSIS
+healtcheck [-h|--help] [--version] [--debug]
+.SH DESCRIPTION
+The healthcheck tool is an end-user application to check the system for configuration problems.
+.SH OPTIONS
+-h, --help
+    show this help message and exit
+
+--version
+    show program's version number and exit
+
+--debug
+    Enables debug logging
+.SH "ENVIRONMENT VARIABLES"
+LEAPP_CONFIG
+.RS 4
+This environment variable allows to override the default location of leapp.conf. If not specified, .leapp/leapp.conf is used when the command is executed inside a leapp repository, otherwise the default /etc/leapp/leapp.conf is used.
+.RE
+
+LEAPP_LOGGER_CONFIG
+.RS 4
+This environment variable allows to override the default location of logger.conf. If not specified, the default /etc/leapp/logger.conf is used.
+.RE
+.SH "REPORTING BUGS"
+Report bugs to the issue tracker <https://github.com/oamg/leapp-repository/issues>.
+.SH "SEE ALSO"
+snactor(1)
+More info available at <https://leapp.readthedocs.io/>.
