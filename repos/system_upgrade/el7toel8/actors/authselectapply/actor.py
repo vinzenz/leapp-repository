@@ -1,6 +1,8 @@
 from leapp.actors import Actor
+from leapp.libraries.common.reporting import report_generic, report_with_remediation
 from leapp.libraries.stdlib import run
-from leapp.models import Authselect, AuthselectDecision, Report
+from leapp.models import Authselect, AuthselectDecision
+from leapp.reporting import Report
 from leapp.tags import IPUWorkflowTag, ApplicationsPhaseTag
 
 
@@ -11,6 +13,7 @@ class AuthselectApply(Actor):
     If confirmed by admin in AuthselectDecision, call suggested authselect
     command to configure the system using this tool.
     """
+
     name = 'authselect_apply'
     consumes = (Authselect, AuthselectDecision,)
     produces = (Report,)
@@ -37,24 +40,14 @@ class AuthselectApply(Actor):
         self.success()
 
     def failure(self, err):
-        self.produce(
-            Report(
-                severity='Error',
-                result='Fail',
-                summary='Authselect call failed.',
-                details=str(err),
-                solutions=self.command
-            )
+        report_generic(
+            title='Authselect call failed.',
+            summary=str(err)
         )
 
     def success(self):
-        self.produce(
-            Report(
-                severity='Info',
-                result='Fixed',
-                summary='System was converted to authselect.',
-                details='System was converted to authselect with the '
-                        'following call: %s' % self.command,
-                solutions=None
-            )
+        report_generic(
+            title='System was converted to authselect.',
+            summary='System was converted to authselect with the '
+                    'following call: %s' % self.command
         )

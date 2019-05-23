@@ -1,7 +1,9 @@
 from leapp.actors import Actor
 from leapp.dialogs import Dialog
 from leapp.dialogs.components import BooleanComponent
-from leapp.models import Authselect, AuthselectDecision, Report
+from leapp.libraries.common.reporting import report_generic, report_with_remediation
+from leapp.models import Authselect, AuthselectDecision
+from leapp.reporting import Report
 from leapp.tags import IPUWorkflowTag, ChecksPhaseTag
 
 
@@ -13,6 +15,7 @@ class AuthselectCheck(Actor):
     that are suggested based on current configuration. This actor will
     ask administrator for confirmation and will report the result.
     """
+
     name = 'authselect_check'
     consumes = (Authselect,)
     produces = (AuthselectDecision, Report,)
@@ -40,30 +43,6 @@ class AuthselectCheck(Actor):
             )
         ),
     )
-
-    summary_pass = 'Authselect will be used to configure PAM and nsswitch.conf.'
-    summary_keep = 'Current PAM and nsswitch.conf configuration will be kept.'
-    details_auto = ('There is a new tool called authselect in RHEL8 that '
-                    'replaced authconfig. The upgrade process detected '
-                    'that authconfig was used to generate current '
-                    'configuration and it will automatically convert it '
-                    'to authselect.')
-    details_pass = ('There is a new tool called authselect in RHEL8 that '
-                    'replaced authconfig. The upgrade process suggested '
-                    'an authselect profile that is similar to your '
-                    'current configuration and your system will be switched '
-                    'to this profile.')
-    details_keep = ('There is a new tool called authselect in RHEL8 that '
-                    'replaced authconfig. The upgrade process suggested '
-                    'an authselect profile that is similar to your '
-                    'current configuration. However this suggestion was '
-                    'refused therefore existing configuration will be kept '
-                    'intact.')
-    details_none = ('There is a new tool called authselect in RHEL8 that '
-                    'replaced authconfig. The upgrade process was unable '
-                    'to find an authselect profile that would be equivalent '
-                    'to your current configuration. Therefore your '
-                    'configuration will be left intact.')
 
     def process(self):
         model = next(self.consume(Authselect))
@@ -106,15 +85,14 @@ class AuthselectCheck(Actor):
                 confirmed=True
             )
         )
-
-        self.produce(
-            Report(
-                severity='Info',
-                result='Pass',
-                summary=self.summary_pass,
-                details=self.details_auto,
-                solutions=self.command
-            )
+        
+        report_generic(
+            title='Authselect will be used to configure PAM and nsswitch.conf.',
+            summary='There is a new tool called authselect in RHEL8 that '
+                    'replaced authconfig. The upgrade process detected '
+                    'that authconfig was used to generate current '
+                    'configuration and it will automatically convert it '
+                    'to authselect. Authselect call is: %s' % self.command
         )
 
     def produce_current_configuration(self, model):
@@ -123,14 +101,14 @@ class AuthselectCheck(Actor):
                 confirmed=False
             )
         )
-
-        self.produce(
-            Report(
-                severity='Info',
-                result='Not Applicable',
-                summary=self.summary_keep,
-                details=self.details_none
-            )
+        
+        report_generic(
+            title='Current PAM and nsswitch.conf configuration will be kept.',
+            summary='There is a new tool called authselect in RHEL8 that '
+                    'replaced authconfig. The upgrade process was unable '
+                    'to find an authselect profile that would be equivalent '
+                    'to your current configuration. Therefore your '
+                    'configuration will be left intact.'
         )
 
     def produce_suggested_configuration(self, model, confirmed):
@@ -141,22 +119,22 @@ class AuthselectCheck(Actor):
         )
 
         if confirmed:
-            self.produce(
-                Report(
-                    severity='Info',
-                    result='Pass',
-                    summary=self.summary_pass,
-                    details=self.details_pass,
-                    solutions=self.command
-                )
+            report_generic(
+                title='Authselect will be used to configure PAM and nsswitch.conf.',
+                summary='There is a new tool called authselect in RHEL8 that '
+                        'replaced authconfig. The upgrade process suggested '
+                        'an authselect profile that is similar to your '
+                        'current configuration and your system will be switched '
+                        'to this profile. Authselect call is: %s' % self.command
             )
         else:
-            self.produce(
-                Report(
-                    severity='Info',
-                    result='Not Applicable',
-                    summary=self.summary_keep,
-                    details=self.details_keep,
-                    solutions=self.command
-                )
+            report_with_remediation(
+                title='Current PAM and nsswitch.conf configuration will be kept.',
+                summary='There is a new tool called authselect in RHEL8 that '
+                        'replaced authconfig. The upgrade process suggested '
+                        'an authselect profile that is similar to your '
+                        'current configuration. However this suggestion was '
+                        'refused therefore existing configuration will be kept '
+                        'intact.',
+                remediation='To switch to authselect manually, call: %s' % self.command
             )

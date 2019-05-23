@@ -61,3 +61,10 @@ disable=
 [FORMAT]
 # Maximum number of characters on a single line.
 max-line-length=119
+
+[DESIGN]
+max-attributes=50
+max-args=50
+
+[REPORTS]
+msg-template='[{msg_id} {symbol}] {msg} File: {path}, line {line}, in {obj}'
